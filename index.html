@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IQ Test</title>
+    <title>IQ Test · Integrity Monitor</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -17,6 +17,7 @@
             --accent: #4dabf7;
             --green: #69db7c;
             --red: #ff6b6b;
+            --warning: #fd7e14;
         }
 
         html, body {
@@ -27,7 +28,7 @@
             overflow: hidden;
         }
 
-        /* ── screens ── */
+        /* screens */
         .screen {
             position: fixed; inset: 0;
             display: flex; align-items: center; justify-content: center;
@@ -35,7 +36,7 @@
         }
         .screen.hidden { opacity: 0; pointer-events: none; transform: translateY(16px); }
 
-        /* ── NAME ENTRY ── */
+        /* name entry */
         #name-screen { flex-direction: column; gap: 0; z-index: 10; }
 
         .name-card {
@@ -116,7 +117,7 @@
         }
         .admin-btn:hover { color: var(--fg); opacity: 1; }
 
-        /* ── ADMIN MODAL ── */
+        /* admin modal */
         .modal-overlay {
             position: fixed; inset: 0;
             background: rgba(0,0,0,.7);
@@ -133,7 +134,8 @@
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 48px 52px;
-            width: 420px;
+            width: 520px;
+            max-width: 90vw;
             text-align: center;
         }
         .modal-card h2 {
@@ -162,9 +164,8 @@
         }
         .modal-close:hover { color: var(--fg); }
 
-        /* Admin panel */
         .admin-panel {
-            max-height: 400px;
+            max-height: 460px;
             overflow-y: auto;
             margin-top: 8px;
         }
@@ -175,19 +176,19 @@
         .admin-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             text-align: left;
         }
         .admin-table th {
             color: var(--sub);
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             letter-spacing: 2px;
             text-transform: uppercase;
-            padding: 8px 12px;
+            padding: 10px 8px;
             border-bottom: 1px solid var(--border);
         }
         .admin-table td {
-            padding: 12px 12px;
+            padding: 12px 8px;
             border-bottom: 1px solid rgba(255,255,255,0.04);
         }
         .admin-table tr:last-child td { border-bottom: none; }
@@ -196,8 +197,17 @@
             background: rgba(77,171,247,.12);
             color: var(--accent);
             border-radius: 4px;
-            padding: 2px 10px;
+            padding: 2px 8px;
             font-weight: 600;
+        }
+        .tab-switch-badge {
+            display: inline-block;
+            background: rgba(253,126,20,0.12);
+            color: var(--warning);
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-weight: 600;
+            font-size: 0.75rem;
         }
         .admin-empty {
             color: var(--sub);
@@ -208,7 +218,9 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
         .admin-header-row h2 { margin-bottom: 0; }
         .admin-count {
@@ -217,14 +229,7 @@
             letter-spacing: 1px;
         }
 
-        /* ── DRAWING CANVAS ── */
-        #drawing-canvas {
-            position: fixed; inset: 0;
-            z-index: 1;
-            cursor: crosshair;
-        }
-
-        /* ── TEST SCREEN ── */
+        /* test screen */
         #test-screen { z-index: 2; flex-direction: column; padding: 20px; }
 
         .hud {
@@ -254,6 +259,23 @@
             color: var(--accent);
         }
         .hud-name { color: var(--fg); font-size: 1rem; }
+
+        .integrity-warning {
+            position: fixed;
+            top: 85px;
+            right: 40px;
+            background: rgba(253,126,20,0.2);
+            border: 1px solid var(--warning);
+            border-radius: 40px;
+            padding: 6px 14px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--warning);
+            backdrop-filter: blur(8px);
+            z-index: 5;
+            letter-spacing: 1px;
+            pointer-events: none;
+        }
 
         .progress-wrap {
             position: fixed;
@@ -295,9 +317,6 @@
             margin-bottom: 24px;
             backdrop-filter: blur(12px);
             user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
         }
 
         .options-grid {
@@ -319,8 +338,6 @@
             text-align: center;
             backdrop-filter: blur(10px);
             transition: all .22s;
-            user-select: none;
-            -webkit-user-select: none;
         }
         .option:hover { background: rgba(77,171,247,.12); border-color: var(--accent); transform: translateY(-2px); }
         .option.selected { background: var(--accent); border-color: var(--accent); color: #0c0c0e; }
@@ -345,20 +362,7 @@
         .next-btn.on { opacity: 1; pointer-events: auto; }
         .next-btn.on:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(77,171,247,.3); }
 
-        .draw-hint {
-            position: fixed;
-            bottom: 32px; left: 40px;
-            font-size: 0.72rem;
-            color: var(--sub);
-            background: rgba(12,12,14,.7);
-            border: 1px solid var(--border);
-            padding: 10px 18px;
-            border-radius: 6px;
-            backdrop-filter: blur(8px);
-            z-index: 5;
-        }
-
-        /* ── RESULT SCREEN ── */
+        /* result screen */
         #result-screen { z-index: 6; overflow-y: auto; padding: 60px 20px; }
         .result-card {
             background: var(--surface);
@@ -460,13 +464,10 @@
 </head>
 <body>
 
-<!-- Drawing canvas (behind everything, only active during test) -->
-<canvas id="drawing-canvas"></canvas>
-
 <!-- NAME ENTRY -->
 <div class="screen" id="name-screen">
     <div class="name-card">
-        <h1>IQ Test</h1>
+        <h1>IQ Test · Integrity Edition</h1>
         <div class="tagline">What's your score?</div>
         <input class="name-input" id="name-input" type="text" placeholder="Enter your name" maxlength="32" autocomplete="off" spellcheck="false">
         <button class="start-btn" id="start-btn" disabled onclick="startTest()">Begin Test</button>
@@ -475,10 +476,9 @@
     </div>
 </div>
 
-<!-- ADMIN MODAL -->
+<!-- ADMIN MODAL (shows tab switches per person) -->
 <div class="modal-overlay" id="admin-modal">
     <div class="modal-card" id="admin-modal-card">
-        <!-- login view -->
         <div id="admin-login-view">
             <h2>Admin Access</h2>
             <input class="name-input" id="admin-pass" type="password" placeholder="Password" autocomplete="off">
@@ -486,22 +486,15 @@
             <button class="start-btn" style="margin-top:14px" onclick="checkAdminPass()">Enter</button>
             <br><button class="modal-close" onclick="closeAdmin()">Cancel</button>
         </div>
-        <!-- data view -->
         <div id="admin-data-view" style="display:none;">
             <div class="admin-header-row">
-                <h2 style="margin-bottom:0">Results</h2>
+                <h2 style="margin-bottom:0">📊 Test results & integrity</h2>
                 <span class="admin-count" id="admin-count">0 entries</span>
             </div>
             <div class="admin-panel">
                 <table class="admin-table" id="admin-table">
                     <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Name</th>
-                            <th>IQ</th>
-                            <th>Correct</th>
-                            <th>Time</th>
-                        </tr>
+                        <tr><th>Name</th><th>IQ</th><th>Correct</th><th>⭯ Tab switches</th><th>Time</th></tr>
                     </thead>
                     <tbody id="admin-tbody"></tbody>
                 </table>
@@ -512,7 +505,7 @@
     </div>
 </div>
 
-<!-- TEST -->
+<!-- TEST SCREEN -->
 <div class="screen hidden" id="test-screen">
     <div class="hud">
         <div class="hud-item">
@@ -528,6 +521,7 @@
             <span class="hud-value"><span id="q-num">1</span><span style="color:var(--sub);font-size:1rem">/20</span></span>
         </div>
     </div>
+    <div class="integrity-warning" id="integrity-warning">📡 Focus: active</div>
     <div class="progress-wrap">
         <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
     </div>
@@ -536,10 +530,9 @@
         <div class="options-grid" id="options-grid"></div>
         <button class="next-btn" id="next-btn" onclick="nextQuestion()">Next →</button>
     </div>
-    <div class="draw-hint">Left Click · Draw &nbsp;|&nbsp; Right Click · Erase</div>
 </div>
 
-<!-- RESULT -->
+<!-- RESULT SCREEN -->
 <div class="screen hidden" id="result-screen">
     <div class="result-card">
         <div class="result-title">Test Complete</div>
@@ -560,50 +553,49 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script>
-// ─────────────────────────────────────────────
-//  DRAWING
-// ─────────────────────────────────────────────
-const drawCanvas = document.getElementById('drawing-canvas');
-const dc = drawCanvas.getContext('2d');
-let drawEnabled = false;
-let isDrawing = false, isErasing = false, lx = 0, ly = 0;
+// --------------------------------------------------------------
+//  TAB SWITCH DETECTION (per test session)
+// --------------------------------------------------------------
+let tabSwitchCount = 0;
+let isTestActive = false;      // becomes true when test starts, false after finish
+let visibilityInterval = null;
 
-function resizeCanvas() {
-    const img = dc.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
-    drawCanvas.width  = window.innerWidth;
-    drawCanvas.height = window.innerHeight;
-    dc.putImageData(img, 0, 0);
+function startTabMonitoring() {
+    tabSwitchCount = 0;
+    const warningEl = document.getElementById('integrity-warning');
+    const updateWarning = () => {
+        if (warningEl) {
+            if (tabSwitchCount === 0) warningEl.innerHTML = `🔒 Focus: active · ${tabSwitchCount} switches`;
+            else warningEl.innerHTML = `⚠️ Tab switches: ${tabSwitchCount}`;
+        }
+    };
+    updateWarning();
+
+    const handleVisibility = () => {
+        if (!isTestActive) return;
+        if (document.hidden) {
+            // user left the tab/window
+            tabSwitchCount++;
+            updateWarning();
+        } else {
+            if (warningEl) warningEl.style.opacity = '1';
+        }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    // store cleanup reference
+    window.__tabMonitorCleanup = () => {
+        document.removeEventListener('visibilitychange', handleVisibility);
+    };
 }
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
 
-drawCanvas.addEventListener('mousedown', e => {
-    if (!drawEnabled) return;
-    lx = e.clientX; ly = e.clientY;
-    if (e.button === 0) { isDrawing = true; isErasing = false; }
-    else if (e.button === 2) { isDrawing = false; isErasing = true; }
-});
-drawCanvas.addEventListener('mousemove', e => {
-    if (!drawEnabled || (!isDrawing && !isErasing)) return;
-    const cx = e.clientX, cy = e.clientY;
-    if (isDrawing) {
-        dc.globalCompositeOperation = 'source-over';
-        dc.strokeStyle = '#ff6b6b';
-        dc.lineWidth = 5;
-        dc.lineCap = 'round'; dc.lineJoin = 'round';
-        dc.beginPath(); dc.moveTo(lx, ly); dc.lineTo(cx, cy); dc.stroke();
-    } else {
-        dc.globalCompositeOperation = 'destination-out';
-        dc.clearRect(cx - 28, cy - 28, 56, 56);
-    }
-    lx = cx; ly = cy;
-});
-['mouseup','mouseleave'].forEach(ev => drawCanvas.addEventListener(ev, () => { isDrawing = false; isErasing = false; }));
-drawCanvas.addEventListener('contextmenu', e => e.preventDefault());
+function stopTabMonitoring() {
+    if (window.__tabMonitorCleanup) window.__tabMonitorCleanup();
+    window.__tabMonitorCleanup = null;
+}
 
-// ─────────────────────────────────────────────
-//  DATA STORE  (localStorage)
-// ─────────────────────────────────────────────
+// --------------------------------------------------------------
+//  DATA STORE (localStorage)
+// --------------------------------------------------------------
 function getResults() {
     try { return JSON.parse(localStorage.getItem('iq_results') || '[]'); } catch { return []; }
 }
@@ -613,9 +605,9 @@ function saveResult(entry) {
     localStorage.setItem('iq_results', JSON.stringify(r));
 }
 
-// ─────────────────────────────────────────────
-//  ADMIN
-// ─────────────────────────────────────────────
+// --------------------------------------------------------------
+//  ADMIN PANEL (shows name, IQ, correct, TAB SWITCHES, time)
+// --------------------------------------------------------------
 const ADMIN_PASS = '123';
 
 function openAdmin() {
@@ -652,14 +644,16 @@ function showAdminData() {
     } else {
         document.getElementById('admin-empty').style.display = 'none';
         document.getElementById('admin-table').style.display = '';
-        results.slice().reverse().forEach((r, i) => {
+        results.slice().reverse().forEach((r, idx) => {
             const tr = document.createElement('tr');
+            const switchCount = r.tabSwitches !== undefined ? r.tabSwitches : 0;
             tr.innerHTML = `
-                <td style="color:var(--sub)">${results.length - i}</td>
-                <td>${escHtml(r.name)}</td>
+                <td style="font-weight:500;">${escHtml(r.name)}</td>
                 <td><span class="iq-badge">${r.iq}</span></td>
                 <td style="color:var(--sub)">${r.correct}/20</td>
-                <td style="color:var(--sub)">${r.time}</td>`;
+                <td><span class="tab-switch-badge">${switchCount} ${switchCount === 1 ? 'switch' : 'switches'}</span></td>
+                <td style="color:var(--sub)">${r.time}</td>
+            `;
             tbody.appendChild(tr);
         });
     }
@@ -667,15 +661,13 @@ function showAdminData() {
 function escHtml(s) {
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
-
-// close modal on overlay click
 document.getElementById('admin-modal').addEventListener('click', function(e) {
     if (e.target === this) closeAdmin();
 });
 
-// ─────────────────────────────────────────────
+// --------------------------------------------------------------
 //  NAME ENTRY
-// ─────────────────────────────────────────────
+// --------------------------------------------------------------
 const nameInput = document.getElementById('name-input');
 const startBtn  = document.getElementById('start-btn');
 nameInput.addEventListener('input', () => {
@@ -685,9 +677,9 @@ nameInput.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !startBtn.disabled) startTest();
 });
 
-// ─────────────────────────────────────────────
-//  QUESTIONS
-// ─────────────────────────────────────────────
+// --------------------------------------------------------------
+//  IQ QUESTIONS (20)
+// --------------------------------------------------------------
 const QUESTIONS = [
     { q: "What is the next number in the sequence?\n2, 4, 8, 16, ?", opts: ["24","32","28","36"], a: 1 },
     { q: "If all roses are flowers and some flowers fade quickly, which statement must be true?", opts: ["All roses fade quickly","Some roses may fade quickly","No roses ever fade","All flowers are roses"], a: 1 },
@@ -711,9 +703,9 @@ const QUESTIONS = [
     { q: "If you flip a fair coin 3 times, how many possible distinct outcomes exist?", opts: ["3","6","8","12"], a: 2 },
 ];
 
-// ─────────────────────────────────────────────
+// --------------------------------------------------------------
 //  TEST STATE
-// ─────────────────────────────────────────────
+// --------------------------------------------------------------
 let userName = '';
 let currentQ = 0;
 let selectedAns = null;
@@ -730,10 +722,16 @@ function showScreen(id) {
 function startTest() {
     userName = nameInput.value.trim();
     if (!userName) return;
+    
+    // reset integrity tracker for this session
+    tabSwitchCount = 0;
+    isTestActive = true;
+    startTabMonitoring();   // begin tracking tab switches
+    
     document.getElementById('hud-name').textContent = userName;
+    document.getElementById('integrity-warning').innerHTML = '🔒 Focus: active · 0 switches';
     currentQ = 0; answers = []; selectedAns = null;
     swStart = Date.now();
-    drawEnabled = true;
     startStopwatch();
     loadQuestion();
     showScreen('test-screen');
@@ -742,6 +740,7 @@ function startTest() {
 function startStopwatch() {
     clearInterval(swInterval);
     swInterval = setInterval(() => {
+        if (!isTestActive) return;
         const s = Math.floor((Date.now() - swStart) / 1000);
         const m = Math.floor(s / 60);
         const sec = s % 60;
@@ -785,10 +784,9 @@ function nextQuestion() {
 
 function finishTest() {
     clearInterval(swInterval);
-    drawEnabled = false;
-    // clear canvas
-    dc.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-
+    isTestActive = false;
+    stopTabMonitoring();   // stop recording tab switches
+    
     const elapsed = Math.floor((Date.now() - swStart) / 1000);
     const mm = Math.floor(elapsed / 60), ss = elapsed % 60;
     const timeStr = String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
@@ -799,13 +797,21 @@ function finishTest() {
     const iq = 50 + correct * 5;
     const cat = iqCategory(iq);
     const acc = Math.round(correct / 20 * 100);
-
-    saveResult({ name: userName, iq, correct, acc, time: timeStr });
+    
+    // SAVE RESULT WITH TAB SWITCH COUNT (integrity metric)
+    saveResult({ 
+        name: userName, 
+        iq, 
+        correct, 
+        acc, 
+        time: timeStr,
+        tabSwitches: tabSwitchCount   // ← how many times they left the tab
+    });
 
     document.getElementById('result-name').textContent = userName;
     document.getElementById('result-iq').textContent   = iq;
     document.getElementById('result-category').textContent = cat;
-    document.getElementById('result-time-line').textContent = 'Completed in ' + timeStr;
+    document.getElementById('result-time-line').textContent = `Completed in ${timeStr} · Tab switches: ${tabSwitchCount}`;
     document.getElementById('rs-correct').textContent = correct + '/20';
     document.getElementById('rs-acc').textContent     = acc + '%';
     document.getElementById('rs-time').textContent    = timeStr;
@@ -892,12 +898,10 @@ function renderChart(userIQ) {
 function resetAll() {
     if (chartInst) { chartInst.destroy(); chartInst = null; }
     clearInterval(swInterval);
-    drawEnabled = false;
-    dc.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+    isTestActive = false;
+    stopTabMonitoring();
     nameInput.value = '';
     startBtn.disabled = true;
-    document.getElementById('admin-login-view').style.display = '';
-    document.getElementById('admin-data-view').style.display  = 'none';
     showScreen('name-screen');
 }
 </script>

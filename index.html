@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Type Test</title>
+    <title>IQ Test</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
@@ -68,95 +68,140 @@
             pointer-events: auto;
         }
 
-        /* MAIN SCREEN */
-        .stats-row {
-            display: flex;
-            gap: 60px;
+        .progress-bar {
+            width: 100%;
+            max-width: 700px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
             margin-bottom: 60px;
-            font-size: 2.5rem;
-            font-weight: 600;
-            letter-spacing: -1px;
+            overflow: hidden;
         }
 
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--cursor) 0%, var(--success) 100%);
+            width: 5%;
+            transition: width 0.3s ease;
         }
 
-        .stat-label {
-            font-size: 0.7rem;
+        .question-counter {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            font-size: 1rem;
             color: var(--sub);
             text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: 500;
+            letter-spacing: 1px;
+            font-weight: 600;
         }
 
-        .stat-value {
-            color: var(--cursor);
-        }
-
-        .words-container {
+        .question-container {
             max-width: 700px;
-            font-size: 1.8rem;
-            line-height: 2.6rem;
-            color: var(--sub);
-            text-align: center;
-            margin-bottom: 80px;
-            font-weight: 400;
+            width: 100%;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .question-text {
+            font-size: 1.6rem;
+            font-weight: 500;
+            margin-bottom: 40px;
+            line-height: 2rem;
+            color: var(--fg);
             letter-spacing: 0.3px;
         }
 
-        .word {
-            position: relative;
-            display: inline-block;
-            padding: 2px 4px;
-            margin: 0 2px;
-            transition: all 0.05s ease;
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
 
-        .word.current {
+        .option {
+            padding: 18px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
             color: var(--fg);
-            text-shadow: 0 0 8px rgba(77, 171, 247, 0.4);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+            user-select: none;
         }
 
-        .word.correct {
-            color: var(--fg);
+        .option:hover {
+            background: rgba(77, 171, 247, 0.1);
+            border-color: var(--cursor);
+            transform: translateY(-2px);
         }
 
-        .word.incorrect {
-            color: var(--error);
-            background: rgba(255, 107, 107, 0.1);
-            border-radius: 3px;
-        }
-
-        .word::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: -4px;
-            height: 2px;
-            width: 0;
+        .option.selected {
             background: var(--cursor);
-            transition: width 0.1s ease;
+            border-color: var(--cursor);
+            color: var(--bg);
         }
 
-        .word.current::after {
-            width: 100%;
+        .option.correct {
+            background: var(--correct);
+            border-color: var(--correct);
+            color: var(--bg);
         }
 
-        #input-field {
-            position: absolute;
-            opacity: 0;
-            left: -999px;
+        .option.incorrect {
+            background: var(--error);
+            border-color: var(--error);
+            color: var(--bg);
         }
 
-        .hint {
-            color: var(--sub);
-            font-size: 0.9rem;
-            margin-top: 40px;
-            transition: opacity 0.3s;
+        .option:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .next-btn {
+            margin-top: 50px;
+            padding: 12px 28px;
+            background: var(--cursor);
+            color: var(--bg);
+            border: none;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .next-btn.enabled {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .next-btn:hover.enabled {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(77, 171, 247, 0.3);
+        }
+
+        .next-btn:active {
+            transform: translateY(0);
         }
 
         /* RESULT SCREEN */
@@ -180,35 +225,68 @@
         .result-title {
             font-size: 2rem;
             font-weight: 600;
-            margin-bottom: 50px;
+            margin-bottom: 60px;
             letter-spacing: -1px;
         }
 
-        .result-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 40px;
+        .iq-score-display {
             margin-bottom: 80px;
         }
 
-        .result-stat {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
+        .iq-number {
+            font-size: 5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--cursor) 0%, var(--success) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
         }
 
-        .result-stat-value {
-            font-size: 2.8rem;
+        .iq-label {
+            font-size: 0.9rem;
+            color: var(--sub);
+            text-transform: uppercase;
+            letter-spacing: 2px;
             font-weight: 600;
-            color: var(--cursor);;
         }
 
-        .result-stat-label {
+        .iq-category {
+            font-size: 1.3rem;
+            color: var(--fg);
+            margin-top: 30px;
+            font-weight: 500;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin: 70px 0;
+        }
+
+        .stat-box {
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .stat-label {
             font-size: 0.75rem;
             color: var(--sub);
             text-transform: uppercase;
             letter-spacing: 1.5px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--cursor);
         }
 
         .chart-container {
@@ -220,41 +298,9 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        #wpm-chart {
+        #distribution-chart {
             width: 100%;
             height: 300px;
-        }
-
-        .mistakes-section {
-            margin-top: 60px;
-            text-align: left;
-            background: rgba(255, 107, 107, 0.05);
-            padding: 30px;
-            border-radius: 8px;
-            border-left: 3px solid var(--error);
-        }
-
-        .mistakes-title {
-            font-size: 0.9rem;
-            color: var(--sub);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
-        .mistake-item {
-            font-size: 0.95rem;
-            margin: 8px 0;
-            padding: 4px 0;
-        }
-
-        .mistake-typed {
-            color: var(--error);
-        }
-
-        .mistake-correct {
-            color: var(--correct);
         }
 
         .retry-btn {
@@ -282,87 +328,58 @@
             transform: translateY(0);
         }
 
-        .refresh-btn {
-            position: absolute;
-            top: 40px;
-            right: 40px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: transparent;
-            border: 2px solid var(--cursor);
-            color: var(--cursor);
-            font-size: 1.2rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-        }
-
-        .refresh-btn:hover {
-            transform: rotate(180deg) scale(1.1);
-            background: rgba(77, 171, 247, 0.1);
-        }
-
-        .refresh-btn:active {
-            transform: rotate(180deg) scale(0.95);
+        .description {
+            margin-top: 30px;
+            font-size: 0.95rem;
+            color: var(--sub);
+            line-height: 1.6;
         }
     </style>
 </head>
 <body>
 
 <div id="main-screen">
-    <div class="stats-row">
-        <div class="stat-item">
-            <div class="stat-label">WPM</div>
-            <div class="stat-value" id="wpm-display">0</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-label">ACC</div>
-            <div class="stat-value" id="acc-display">100%</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-label">Time</div>
-            <div class="stat-value" id="time-display">30</div>
-        </div>
+    <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    
+    <div class="question-counter">
+        <span id="question-number">1</span> / 20
     </div>
 
-    <div class="words-container" id="words-container"></div>
-    <input type="text" id="input-field" autocomplete="off">
-    <div class="hint">Click to start typing...</div>
-    <button class="refresh-btn" id="refresh-btn" onclick="refreshTest()">⟳</button>
+    <div class="question-container" id="question-container">
+        <div class="question-text" id="question-text"></div>
+        <div class="options-grid" id="options-grid"></div>
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()">Next</button>
+    </div>
 </div>
 
 <div id="result-screen">
     <div class="result-container">
         <div class="result-title">Test Complete</div>
         
-        <div class="result-stats">
-            <div class="result-stat">
-                <div class="result-stat-value" id="final-wpm">0</div>
-                <div class="result-stat-label">WPM</div>
+        <div class="iq-score-display">
+            <div class="iq-number" id="final-iq">0</div>
+            <div class="iq-label">Your IQ Score</div>
+            <div class="iq-category" id="iq-category">Average</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-label">Correct Answers</div>
+                <div class="stat-value" id="correct-count">0</div>
             </div>
-            <div class="result-stat">
-                <div class="result-stat-value" id="final-acc">0%</div>
-                <div class="result-stat-label">Accuracy</div>
-            </div>
-            <div class="result-stat">
-                <div class="result-stat-value" id="final-errors">0</div>
-                <div class="result-stat-label">Errors</div>
+            <div class="stat-box">
+                <div class="stat-label">Accuracy</div>
+                <div class="stat-value" id="accuracy-percent">0%</div>
             </div>
         </div>
 
         <div class="chart-container">
-            <canvas id="wpm-chart"></canvas>
+            <canvas id="distribution-chart"></canvas>
         </div>
 
-        <div id="mistakes-container" class="mistakes-section" style="display: none;">
-            <div class="mistakes-title">Mistakes</div>
-            <div id="mistakes-list"></div>
-        </div>
+        <div class="description" id="description"></div>
 
         <button class="retry-btn" onclick="newTest()">Try Again</button>
     </div>
@@ -370,220 +387,273 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script>
-    const wordBank = ["the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "minimalist", "clean", "focus", "speed", "accuracy", "practice", "typing", "keyboard", "precision", "grace", "beautiful", "elegant", "simple", "modern", "sleek", "swift", "fluid", "smooth", "crisp", "sharp", "bright", "light", "dark", "calm", "quiet", "peaceful", "serene", "vast", "grand", "small", "tiny", "huge", "massive", "mighty", "strong", "powerful", "vibrant", "vivid", "bold", "daring", "brave", "wise", "clever", "smart", "keen", "alert", "aware", "ready", "prompt", "quick", "fast", "rapid", "swift", "hasty", "eager", "zealous"];
-    
-    let textToType = generateRandomWords(10);
-
-    function generateRandomWords(count) {
-        const words = [];
-        for (let i = 0; i < count; i++) {
-            words.push(wordBank[Math.floor(Math.random() * wordBank.length)]);
+    const questions = [
+        {
+            question: "What is the next number in the sequence? 2, 4, 8, 16, ?",
+            options: ["24", "32", "28", "36"],
+            correct: 1
+        },
+        {
+            question: "If all roses are flowers and some flowers fade quickly, which is true?",
+            options: ["All roses fade quickly", "Some roses fade quickly", "No roses fade", "All flowers are roses"],
+            correct: 1
+        },
+        {
+            question: "What number is missing? 5, 10, 20, 40, ?, 160",
+            options: ["60", "80", "100", "120"],
+            correct: 1
+        },
+        {
+            question: "A bat and a ball cost $1.10 total. The bat costs $1 more than the ball. How much does the ball cost?",
+            options: ["$0.10", "$0.05", "$0.15", "$0.20"],
+            correct: 1
+        },
+        {
+            question: "If you rearrange the letters in 'SILENT', you get?",
+            options: ["LISTEN", "STOLEN", "ENLIST", "TINSEL"],
+            correct: 2
+        },
+        {
+            question: "What is the next letter? A, C, E, G, I, ?",
+            options: ["J", "K", "L", "M"],
+            correct: 1
+        },
+        {
+            question: "All rectangles are quadrilaterals. All squares are rectangles. Therefore:",
+            options: ["All rectangles are squares", "All squares are quadrilaterals", "No squares are quadrilaterals", "Some quadrilaterals are not rectangles"],
+            correct: 1
+        },
+        {
+            question: "What is the missing number? 1, 1, 2, 3, 5, 8, 13, ?",
+            options: ["18", "21", "19", "20"],
+            correct: 1
+        },
+        {
+            question: "If 3 + 4 = 7 and 5 + 6 = 11, then 7 + 8 = ?",
+            options: ["14", "15", "16", "17"],
+            correct: 1
+        },
+        {
+            question: "Which word does NOT belong with the others?",
+            options: ["Dog", "Cat", "Eagle", "Truck"],
+            correct: 3
+        },
+        {
+            question: "What is 144 ÷ 12?",
+            options: ["10", "11", "12", "13"],
+            correct: 2
+        },
+        {
+            question: "If a triangle has sides 3, 4, and 5, what is its area?",
+            options: ["6", "10", "12", "15"],
+            correct: 0
+        },
+        {
+            question: "What number multiplied by itself gives 196?",
+            options: ["12", "13", "14", "15"],
+            correct: 2
+        },
+        {
+            question: "If you have 8 apples and give away 3, then get 5 more, how many do you have?",
+            options: ["8", "10", "13", "16"],
+            correct: 2
+        },
+        {
+            question: "What is the next in the pattern? 100, 90, 81, 73, ?",
+            options: ["64", "65", "66", "67"],
+            correct: 2
+        },
+        {
+            question: "Which of these is a prime number?",
+            options: ["15", "21", "17", "25"],
+            correct: 2
+        },
+        {
+            question: "If a book costs $20 and is on sale for 25% off, what is the price?",
+            options: ["$10", "$15", "$18", "$19"],
+            correct: 1
+        },
+        {
+            question: "What is the opposite of 'expand'?",
+            options: ["Extend", "Contract", "Stretch", "Spread"],
+            correct: 1
+        },
+        {
+            question: "How many sides does a hexagon have?",
+            options: ["4", "5", "6", "8"],
+            correct: 2
+        },
+        {
+            question: "If you flip a coin 3 times, how many possible outcomes are there?",
+            options: ["3", "6", "8", "12"],
+            correct: 2
         }
-        return words;
-    }
-    
-    let currentWordIndex = 0;
-    let startTime = null;
-    let isActive = false;
-    let timeLeft = 30;
-    let timerInterval = null;
-    let typedWords = [];
-    let wpmHistory = [0];
+    ];
+
+    let currentQuestion = 0;
+    let selectedAnswer = null;
+    let answers = [];
     let chartInstance = null;
 
-    const inputField = document.getElementById('input-field');
-    const wordsContainer = document.getElementById('words-container');
-    const wpmDisplay = document.getElementById('wpm-display');
-    const accDisplay = document.getElementById('acc-display');
-    const timeDisplay = document.getElementById('time-display');
     const mainScreen = document.getElementById('main-screen');
     const resultScreen = document.getElementById('result-screen');
+    const questionText = document.getElementById('question-text');
+    const optionsGrid = document.getElementById('options-grid');
+    const nextBtn = document.getElementById('next-btn');
+    const questionNumber = document.getElementById('question-number');
+    const progressFill = document.getElementById('progress-fill');
 
-    // Initialize
     function init() {
-        renderWords();
-        document.addEventListener('click', () => inputField.focus());
-        inputField.addEventListener('input', handleInput);
+        loadQuestion();
+        document.addEventListener('click', () => {
+            const options = document.querySelectorAll('.option');
+            options.forEach(opt => opt.focus());
+        });
     }
 
-    function refreshTest() {
-        textToType = generateRandomWords(10);
-        resetTest();
+    function loadQuestion() {
+        const q = questions[currentQuestion];
+        questionText.textContent = q.question;
+        
+        optionsGrid.innerHTML = q.options.map((option, index) => 
+            `<button class="option" onclick="selectAnswer(${index})">${option}</button>`
+        ).join('');
+        
+        questionNumber.textContent = currentQuestion + 1;
+        progressFill.style.width = ((currentQuestion) / 20) * 100 + '%';
+        
+        selectedAnswer = null;
+        nextBtn.classList.remove('enabled');
     }
 
-    function newTest() {
-        textToType = generateRandomWords(10);
-        resetTest();
-    }
-
-    function resetTest() {
-        currentWordIndex = 0;
-        startTime = null;
-        isActive = false;
-        timeLeft = 30;
-        typedWords = [];
-        wpmHistory = [0];
-        
-        clearInterval(timerInterval);
-        inputField.disabled = false;
-        inputField.value = '';
-        
-        timeDisplay.textContent = '30';
-        wpmDisplay.textContent = '0';
-        accDisplay.textContent = '100%';
-        
-        renderWords();
-        inputField.focus();
-        
-        mainScreen.classList.remove('fade-out');
-        resultScreen.classList.remove('show');
-        
-        if (chartInstance) {
-            chartInstance.destroy();
-            chartInstance = null;
-        }
-    }
-
-    function renderWords() {
-        wordsContainer.innerHTML = textToType.map((word, i) => 
-            `<span class="word ${i === 0 ? 'current' : ''}">${word}</span>`
-        ).join(' ');
-    }
-
-    function handleInput(e) {
-        if (!isActive && inputField.value.trim() !== '') {
-            startTest();
-        }
-
-        const inputValue = inputField.value;
-        const currentWord = textToType[currentWordIndex];
-        const wordSpan = wordsContainer.children[currentWordIndex];
-
-        if (inputValue.endsWith(' ')) {
-            const typedWord = inputValue.trim();
-            typedWords.push({
-                typed: typedWord,
-                correct: currentWord,
-                isCorrect: typedWord === currentWord
-            });
-
-            wordSpan.className = `word ${typedWord === currentWord ? 'correct' : 'incorrect'}`;
-
-            currentWordIndex++;
-            inputField.value = '';
-
-            if (currentWordIndex < textToType.length) {
-                wordsContainer.children[currentWordIndex].classList.add('current');
-            } else {
-                endTest();
+    function selectAnswer(index) {
+        selectedAnswer = index;
+        const options = document.querySelectorAll('.option');
+        options.forEach((opt, i) => {
+            opt.classList.remove('selected');
+            if (i === index) {
+                opt.classList.add('selected');
             }
+        });
+        nextBtn.classList.add('enabled');
+    }
+
+    function nextQuestion() {
+        if (selectedAnswer === null) return;
+        
+        answers.push(selectedAnswer);
+        currentQuestion++;
+        
+        if (currentQuestion < 20) {
+            loadQuestion();
         } else {
-            // Live preview
-            if (currentWord.startsWith(inputValue)) {
-                wordSpan.className = 'word current';
-            } else {
-                wordSpan.className = 'word incorrect current';
-            }
+            endTest();
         }
-
-        updateStats();
     }
 
-    function startTest() {
-        isActive = true;
-        startTime = Date.now();
-        
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            timeDisplay.textContent = timeLeft;
-            updateStats();
-
-            if (timeLeft <= 0) {
-                endTest();
+    function calculateIQ() {
+        let correct = 0;
+        questions.forEach((q, i) => {
+            if (answers[i] === q.correct) {
+                correct++;
             }
-        }, 1000);
+        });
+        
+        // IQ scale: 50 is 0 correct, 150 is 20 correct, 100 is 10 correct
+        const iq = 50 + (correct * 5);
+        return iq;
     }
 
-    function updateStats() {
-        const elapsed = (30 - timeLeft) / 60;
-        const correctWords = typedWords.filter(w => w.isCorrect).length;
-        const totalWords = typedWords.length || 1;
-        
-        let wpm = 0;
-        if (elapsed > 0) {
-            wpm = Math.round(totalWords / elapsed);
-        }
-        
-        const accuracy = totalWords > 0 ? Math.round((correctWords / totalWords) * 100) : 100;
-        
-        wpmDisplay.textContent = wpm;
-        accDisplay.textContent = accuracy + '%';
-        wpmHistory[wpmHistory.length - 1] = wpm;
+    function getIQCategory(iq) {
+        if (iq >= 130) return "Genius";
+        if (iq >= 120) return "Very Superior";
+        if (iq >= 110) return "Superior";
+        if (iq >= 100) return "High Average";
+        if (iq >= 90) return "Average";
+        if (iq >= 80) return "Low Average";
+        if (iq >= 70) return "Below Average";
+        return "Very Low";
+    }
+
+    function getDescription(iq) {
+        const descriptions = {
+            "Genius": "Exceptional intellectual ability. You possess rare cognitive talents and can solve complex problems with ease.",
+            "Very Superior": "Outstanding intellectual ability. You demonstrate excellent reasoning and analytical skills.",
+            "Superior": "Well above average intelligence. You excel at logical thinking and problem-solving.",
+            "High Average": "Above average intelligence. You have strong cognitive abilities and quick comprehension.",
+            "Average": "Average intelligence. You have typical cognitive abilities across most domains.",
+            "Low Average": "Slightly below average intelligence. You may need more time for complex tasks.",
+            "Below Average": "Below average intelligence. You may benefit from additional support in certain areas.",
+            "Very Low": "Significantly below average intelligence. Additional support and resources are recommended."
+        };
+        return descriptions[iq] || descriptions["Average"];
     }
 
     function endTest() {
-        clearInterval(timerInterval);
-        inputField.disabled = true;
-        isActive = false;
-
-        const totalWords = typedWords.length;
-        const correctWords = typedWords.filter(w => w.isCorrect).length;
-        const errorCount = totalWords - correctWords;
-        const accuracy = totalWords > 0 ? Math.round((correctWords / totalWords) * 100) : 100;
-        const finalWpm = parseInt(wpmDisplay.textContent);
-
-        // Show results
         mainScreen.classList.add('fade-out');
         resultScreen.classList.add('show');
-
-        document.getElementById('final-wpm').textContent = finalWpm;
-        document.getElementById('final-acc').textContent = accuracy + '%';
-        document.getElementById('final-errors').textContent = errorCount;
-
-        // Show mistakes if any
-        const mistakes = typedWords.filter(w => !w.isCorrect);
-        if (mistakes.length > 0) {
-            const mistakesContainer = document.getElementById('mistakes-container');
-            const mistakesList = document.getElementById('mistakes-list');
-            mistakesContainer.style.display = 'block';
-            mistakesList.innerHTML = mistakes.map(m => 
-                `<div class="mistake-item"><span class="mistake-typed">${m.typed}</span> → <span class="mistake-correct">${m.correct}</span></div>`
-            ).join('');
-        }
-
-        // Draw chart
-        drawChart();
+        
+        let correct = 0;
+        questions.forEach((q, i) => {
+            if (answers[i] === q.correct) {
+                correct++;
+            }
+        });
+        
+        const iq = calculateIQ();
+        const category = getIQCategory(iq);
+        const accuracy = Math.round((correct / 20) * 100);
+        
+        document.getElementById('final-iq').textContent = iq;
+        document.getElementById('iq-category').textContent = category;
+        document.getElementById('correct-count').textContent = correct;
+        document.getElementById('accuracy-percent').textContent = accuracy + '%';
+        document.getElementById('description').textContent = getDescription(category);
+        
+        drawChart(iq, correct);
     }
 
-    function drawChart() {
-        const ctx = document.getElementById('wpm-chart').getContext('2d');
+    function drawChart(userIQ, correct) {
+        const ctx = document.getElementById('distribution-chart').getContext('2d');
         
-        // Generate more realistic WPM data points
-        const dataPoints = [];
-        let currentWpm = wpmHistory[0] || 0;
-        for (let i = 0; i < 30; i++) {
-            currentWpm += (Math.random() - 0.4) * 15;
-            currentWpm = Math.max(0, Math.min(currentWpm, parseInt(wpmDisplay.textContent) + 20));
-            dataPoints.push(Math.round(currentWpm));
-        }
-
+        // Normal distribution data for IQ scores
+        const iqScores = Array.from({length: 101}, (_, i) => 50 + i);
+        const distribution = iqScores.map(score => {
+            const mean = 100;
+            const stdDev = 15;
+            const x = (score - mean) / stdDev;
+            return Math.exp(-0.5 * x * x) / (stdDev * Math.sqrt(2 * Math.PI)) * 1000;
+        });
+        
         chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: Array.from({ length: 30 }, (_, i) => i + 1),
+                labels: iqScores,
                 datasets: [{
-                    label: 'WPM',
-                    data: dataPoints,
-                    borderColor: '#4dabf7',
-                    backgroundColor: 'rgba(77, 171, 247, 0.05)',
+                    label: 'IQ Distribution',
+                    data: distribution,
+                    borderColor: '#7c7c7c',
+                    backgroundColor: 'rgba(124, 124, 124, 0.05)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.4,
                     pointRadius: 0,
                     pointHoverRadius: 6,
-                    pointBackgroundColor: '#4dabf7',
-                    pointBorderColor: 'transparent'
-                }]
+                }],
+                // Add a vertical line for user's score
+                plugins: {
+                    annotation: {
+                        annotations: {
+                            userScore: {
+                                type: 'line',
+                                xMin: userIQ,
+                                xMax: userIQ,
+                                borderColor: '#4dabf7',
+                                borderWidth: 2
+                            }
+                        }
+                    }
+                }
             },
             options: {
                 responsive: true,
@@ -596,15 +666,103 @@
                     y: {
                         beginAtZero: true,
                         grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                        ticks: { color: '#7c7c7c', font: { family: "'JetBrains Mono'" } }
+                        ticks: { color: '#7c7c7c', display: false }
                     },
                     x: {
                         grid: { display: false },
-                        ticks: { color: '#7c7c7c', font: { family: "'JetBrains Mono'" } }
+                        ticks: { color: '#7c7c7c', font: { family: "'JetBrains Mono'" } },
+                        min: 50,
+                        max: 150
                     }
                 }
             }
         });
+
+        // Add vertical line for user's score
+        const canvas = ctx.canvas;
+        const plugin = {
+            id: 'userScoreLine',
+            afterDatasetsDraw(chart) {
+                const {ctx, chartArea: {left, top, width, height}} = chart;
+                const xScale = chart.scales.x;
+                const xPos = xScale.getPixelForValue(userIQ);
+                
+                ctx.save();
+                ctx.strokeStyle = '#4dabf7';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(xPos, top);
+                ctx.lineTo(xPos, top + height);
+                ctx.stroke();
+                
+                ctx.fillStyle = '#4dabf7';
+                ctx.font = "12px 'JetBrains Mono'";
+                ctx.textAlign = 'center';
+                ctx.fillText('Your Score: ' + userIQ, xPos, top - 10);
+                ctx.restore();
+            }
+        };
+        
+        chartInstance.options.plugins.userScoreLine = {};
+        Chart.helpers.arrayUnique(chartInstance.options.plugins, plugin);
+        chartInstance.destroy();
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: iqScores,
+                datasets: [{
+                    label: 'IQ Distribution',
+                    data: distribution,
+                    borderColor: '#7c7c7c',
+                    backgroundColor: 'rgba(124, 124, 124, 0.05)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    filler: { propagate: true },
+                    userScoreLine: {}
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#7c7c7c', display: false }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#7c7c7c', font: { family: "'JetBrains Mono'" } },
+                        min: 50,
+                        max: 150
+                    }
+                }
+            },
+            plugins: [plugin]
+        });
+    }
+
+    function newTest() {
+        currentQuestion = 0;
+        selectedAnswer = null;
+        answers = [];
+        
+        if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+        }
+        
+        mainScreen.classList.remove('fade-out');
+        resultScreen.classList.remove('show');
+        
+        loadQuestion();
     }
 
     init();

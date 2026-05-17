@@ -1,2 +1,1 @@
-# Keyboard
-WPM test
+IQ Test

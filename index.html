@@ -33,6 +33,16 @@
             justify-content: center;
         }
 
+        canvas#drawing-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            cursor: crosshair;
+        }
+
         #main-screen {
             width: 100%;
             height: 100%;
@@ -43,6 +53,8 @@
             padding: 40px 20px;
             opacity: 1;
             transition: opacity 0.6s ease;
+            position: relative;
+            z-index: 2;
         }
 
         #main-screen.fade-out {
@@ -61,11 +73,39 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.6s ease;
+            position: relative;
+            z-index: 2;
         }
 
         #result-screen.show {
             opacity: 1;
             pointer-events: auto;
+        }
+
+        .timer-box {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--cursor);
+            background: rgba(15, 15, 15, 0.7);
+            padding: 15px 25px;
+            border-radius: 8px;
+            border: 2px solid var(--cursor);
+            backdrop-filter: blur(10px);
+            z-index: 3;
+            letter-spacing: 1px;
+        }
+
+        .timer-label {
+            font-size: 0.6rem;
+            color: var(--sub);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
         }
 
         .progress-bar {
@@ -94,6 +134,10 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             font-weight: 600;
+            background: rgba(15, 15, 15, 0.7);
+            padding: 10px 20px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
         }
 
         .question-container {
@@ -120,6 +164,11 @@
             line-height: 2rem;
             color: var(--fg);
             letter-spacing: 0.3px;
+            background: rgba(15, 15, 15, 0.6);
+            padding: 25px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .options-grid {
@@ -130,7 +179,7 @@
 
         .option {
             padding: 18px 24px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(15, 15, 15, 0.6);
             border: 2px solid rgba(255, 255, 255, 0.1);
             border-radius: 6px;
             color: var(--fg);
@@ -141,10 +190,11 @@
             transition: all 0.3s ease;
             text-align: center;
             user-select: none;
+            backdrop-filter: blur(10px);
         }
 
         .option:hover {
-            background: rgba(77, 171, 247, 0.1);
+            background: rgba(77, 171, 247, 0.15);
             border-color: var(--cursor);
             transform: translateY(-2px);
         }
@@ -209,6 +259,11 @@
             text-align: center;
             max-width: 800px;
             animation: slideUp 0.5s ease;
+            background: rgba(15, 15, 15, 0.8);
+            padding: 60px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         @keyframes slideUp {
@@ -294,7 +349,6 @@
             padding: 40px;
             background: rgba(255, 255, 255, 0.03);
             border-radius: 8px;
-            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
@@ -334,11 +388,32 @@
             color: var(--sub);
             line-height: 1.6;
         }
+
+        .drawing-hint {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            font-size: 0.8rem;
+            color: var(--sub);
+            background: rgba(15, 15, 15, 0.7);
+            padding: 12px 20px;
+            border-radius: 6px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 3;
+        }
     </style>
 </head>
 <body>
 
+<canvas id="drawing-canvas"></canvas>
+
 <div id="main-screen">
+    <div class="timer-box">
+        <span class="timer-label">Time</span>
+        <span id="timer-display">10:00</span>
+    </div>
+
     <div class="progress-bar">
         <div class="progress-fill" id="progress-fill"></div>
     </div>
@@ -351,6 +426,10 @@
         <div class="question-text" id="question-text"></div>
         <div class="options-grid" id="options-grid"></div>
         <button class="next-btn" id="next-btn" onclick="nextQuestion()">Next</button>
+    </div>
+
+    <div class="drawing-hint">
+        Left Click to Draw | Right Click to Erase
     </div>
 </div>
 
@@ -387,6 +466,80 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script>
+    // Drawing Canvas
+    const canvas = document.getElementById('drawing-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let isDrawing = false;
+    let isErasing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+        lastX = e.clientX;
+        lastY = e.clientY;
+        
+        if (e.button === 0) { // Left click - draw
+            isDrawing = true;
+            isErasing = false;
+        } else if (e.button === 2) { // Right click - erase
+            isDrawing = false;
+            isErasing = true;
+        }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isDrawing && !isErasing) return;
+
+        const currentX = e.clientX;
+        const currentY = e.clientY;
+
+        if (isDrawing) {
+            // Draw with red marker
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.globalCompositeOperation = 'source-over';
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(currentX, currentY);
+            ctx.stroke();
+        } else if (isErasing) {
+            // Erase with large marker
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.clearRect(currentX - 25, currentY - 25, 50, 50);
+        }
+
+        lastX = currentX;
+        lastY = currentY;
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        isDrawing = false;
+        isErasing = false;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+        isDrawing = false;
+        isErasing = false;
+    });
+
+    // Prevent context menu on right click
+    canvas.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+    });
+
+    // IQ Test Logic
     const questions = [
         {
             question: "What is the next number in the sequence? 2, 4, 8, 16, ?",
@@ -494,6 +647,9 @@
     let selectedAnswer = null;
     let answers = [];
     let chartInstance = null;
+    let testStartTime = null;
+    let totalTestTime = 600; // 10 minutes in seconds
+    let timerInterval = null;
 
     const mainScreen = document.getElementById('main-screen');
     const resultScreen = document.getElementById('result-screen');
@@ -502,13 +658,28 @@
     const nextBtn = document.getElementById('next-btn');
     const questionNumber = document.getElementById('question-number');
     const progressFill = document.getElementById('progress-fill');
+    const timerDisplay = document.getElementById('timer-display');
 
     function init() {
+        testStartTime = Date.now();
+        startTimer();
         loadQuestion();
-        document.addEventListener('click', () => {
-            const options = document.querySelectorAll('.option');
-            options.forEach(opt => opt.focus());
-        });
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - testStartTime) / 1000);
+            const remaining = Math.max(0, totalTestTime - elapsed);
+            
+            const minutes = Math.floor(remaining / 60);
+            const seconds = remaining % 60;
+            
+            timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (remaining <= 0) {
+                endTest();
+            }
+        }, 1000);
     }
 
     function loadQuestion() {
@@ -559,7 +730,6 @@
             }
         });
         
-        // IQ scale: 50 is 0 correct, 150 is 20 correct, 100 is 10 correct
         const iq = 50 + (correct * 5);
         return iq;
     }
@@ -590,6 +760,7 @@
     }
 
     function endTest() {
+        clearInterval(timerInterval);
         mainScreen.classList.add('fade-out');
         resultScreen.classList.add('show');
         
@@ -614,9 +785,9 @@
     }
 
     function drawChart(userIQ, correct) {
-        const ctx = document.getElementById('distribution-chart').getContext('2d');
+        const canvasElement = document.getElementById('distribution-chart');
+        const ctx = canvasElement.getContext('2d');
         
-        // Normal distribution data for IQ scores
         const iqScores = Array.from({length: 101}, (_, i) => 50 + i);
         const distribution = iqScores.map(score => {
             const mean = 100;
@@ -624,62 +795,7 @@
             const x = (score - mean) / stdDev;
             return Math.exp(-0.5 * x * x) / (stdDev * Math.sqrt(2 * Math.PI)) * 1000;
         });
-        
-        chartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: iqScores,
-                datasets: [{
-                    label: 'IQ Distribution',
-                    data: distribution,
-                    borderColor: '#7c7c7c',
-                    backgroundColor: 'rgba(124, 124, 124, 0.05)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    pointHoverRadius: 6,
-                }],
-                // Add a vertical line for user's score
-                plugins: {
-                    annotation: {
-                        annotations: {
-                            userScore: {
-                                type: 'line',
-                                xMin: userIQ,
-                                xMax: userIQ,
-                                borderColor: '#4dabf7',
-                                borderWidth: 2
-                            }
-                        }
-                    }
-                }
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    filler: { propagate: true }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                        ticks: { color: '#7c7c7c', display: false }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#7c7c7c', font: { family: "'JetBrains Mono'" } },
-                        min: 50,
-                        max: 150
-                    }
-                }
-            }
-        });
 
-        // Add vertical line for user's score
-        const canvas = ctx.canvas;
         const plugin = {
             id: 'userScoreLine',
             afterDatasetsDraw(chart) {
@@ -704,10 +820,6 @@
             }
         };
         
-        chartInstance.options.plugins.userScoreLine = {};
-        Chart.helpers.arrayUnique(chartInstance.options.plugins, plugin);
-        chartInstance.destroy();
-
         chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
@@ -759,9 +871,18 @@
             chartInstance = null;
         }
         
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
         mainScreen.classList.remove('fade-out');
         resultScreen.classList.remove('show');
         
+        testStartTime = Date.now();
+        startTimer();
         loadQuestion();
     }
 

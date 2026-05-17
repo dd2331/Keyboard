@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IQ Test · Integrity Monitor</title>
+    <title>IQ Test</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -134,7 +134,7 @@
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 48px 52px;
-            width: 520px;
+            width: 560px;
             max-width: 90vw;
             text-align: center;
         }
@@ -259,23 +259,6 @@
             color: var(--accent);
         }
         .hud-name { color: var(--fg); font-size: 1rem; }
-
-        .integrity-warning {
-            position: fixed;
-            top: 85px;
-            right: 40px;
-            background: rgba(253,126,20,0.2);
-            border: 1px solid var(--warning);
-            border-radius: 40px;
-            padding: 6px 14px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: var(--warning);
-            backdrop-filter: blur(8px);
-            z-index: 5;
-            letter-spacing: 1px;
-            pointer-events: none;
-        }
 
         .progress-wrap {
             position: fixed;
@@ -467,7 +450,7 @@
 <!-- NAME ENTRY -->
 <div class="screen" id="name-screen">
     <div class="name-card">
-        <h1>IQ Test · Integrity Edition</h1>
+        <h1>IQ Test</h1>
         <div class="tagline">What's your score?</div>
         <input class="name-input" id="name-input" type="text" placeholder="Enter your name" maxlength="32" autocomplete="off" spellcheck="false">
         <button class="start-btn" id="start-btn" disabled onclick="startTest()">Begin Test</button>
@@ -476,7 +459,7 @@
     </div>
 </div>
 
-<!-- ADMIN MODAL (shows tab switches per person) -->
+<!-- ADMIN MODAL (shows tab switches per person - hidden from regular user) -->
 <div class="modal-overlay" id="admin-modal">
     <div class="modal-card" id="admin-modal-card">
         <div id="admin-login-view">
@@ -488,13 +471,13 @@
         </div>
         <div id="admin-data-view" style="display:none;">
             <div class="admin-header-row">
-                <h2 style="margin-bottom:0">📊 Test results & integrity</h2>
+                <h2 style="margin-bottom:0">📊 Results & Integrity</h2>
                 <span class="admin-count" id="admin-count">0 entries</span>
             </div>
             <div class="admin-panel">
                 <table class="admin-table" id="admin-table">
                     <thead>
-                        <tr><th>Name</th><th>IQ</th><th>Correct</th><th>⭯ Tab switches</th><th>Time</th></tr>
+                        <tr><th>Name</th><th>IQ</th><th>Correct</th><th>🚫 Tab switches</th><th>Time</th></tr>
                     </thead>
                     <tbody id="admin-tbody"></tbody>
                 </table>
@@ -505,7 +488,7 @@
     </div>
 </div>
 
-<!-- TEST SCREEN -->
+<!-- TEST SCREEN (no visible integrity warning) -->
 <div class="screen hidden" id="test-screen">
     <div class="hud">
         <div class="hud-item">
@@ -521,7 +504,6 @@
             <span class="hud-value"><span id="q-num">1</span><span style="color:var(--sub);font-size:1rem">/20</span></span>
         </div>
     </div>
-    <div class="integrity-warning" id="integrity-warning">📡 Focus: active</div>
     <div class="progress-wrap">
         <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
     </div>
@@ -554,35 +536,20 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script>
 // --------------------------------------------------------------
-//  TAB SWITCH DETECTION (per test session)
+//  TAB SWITCH DETECTION (silent, only for admin)
 // --------------------------------------------------------------
 let tabSwitchCount = 0;
-let isTestActive = false;      // becomes true when test starts, false after finish
-let visibilityInterval = null;
+let isTestActive = false;
 
-function startTabMonitoring() {
+function startSilentTabMonitoring() {
     tabSwitchCount = 0;
-    const warningEl = document.getElementById('integrity-warning');
-    const updateWarning = () => {
-        if (warningEl) {
-            if (tabSwitchCount === 0) warningEl.innerHTML = `🔒 Focus: active · ${tabSwitchCount} switches`;
-            else warningEl.innerHTML = `⚠️ Tab switches: ${tabSwitchCount}`;
-        }
-    };
-    updateWarning();
-
     const handleVisibility = () => {
         if (!isTestActive) return;
         if (document.hidden) {
-            // user left the tab/window
             tabSwitchCount++;
-            updateWarning();
-        } else {
-            if (warningEl) warningEl.style.opacity = '1';
         }
     };
     document.addEventListener('visibilitychange', handleVisibility);
-    // store cleanup reference
     window.__tabMonitorCleanup = () => {
         document.removeEventListener('visibilitychange', handleVisibility);
     };
@@ -723,13 +690,12 @@ function startTest() {
     userName = nameInput.value.trim();
     if (!userName) return;
     
-    // reset integrity tracker for this session
+    // reset silent integrity tracker
     tabSwitchCount = 0;
     isTestActive = true;
-    startTabMonitoring();   // begin tracking tab switches
+    startSilentTabMonitoring();   // silently track tab switches (invisible to user)
     
     document.getElementById('hud-name').textContent = userName;
-    document.getElementById('integrity-warning').innerHTML = '🔒 Focus: active · 0 switches';
     currentQ = 0; answers = []; selectedAns = null;
     swStart = Date.now();
     startStopwatch();
@@ -798,20 +764,20 @@ function finishTest() {
     const cat = iqCategory(iq);
     const acc = Math.round(correct / 20 * 100);
     
-    // SAVE RESULT WITH TAB SWITCH COUNT (integrity metric)
+    // SAVE RESULT WITH TAB SWITCH COUNT (only visible in admin panel)
     saveResult({ 
         name: userName, 
         iq, 
         correct, 
         acc, 
         time: timeStr,
-        tabSwitches: tabSwitchCount   // ← how many times they left the tab
+        tabSwitches: tabSwitchCount
     });
 
     document.getElementById('result-name').textContent = userName;
     document.getElementById('result-iq').textContent   = iq;
     document.getElementById('result-category').textContent = cat;
-    document.getElementById('result-time-line').textContent = `Completed in ${timeStr} · Tab switches: ${tabSwitchCount}`;
+    document.getElementById('result-time-line').textContent = `Completed in ${timeStr}`;
     document.getElementById('rs-correct').textContent = correct + '/20';
     document.getElementById('rs-acc').textContent     = acc + '%';
     document.getElementById('rs-time').textContent    = timeStr;

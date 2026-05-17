@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist WPM Test</title>
+    <style>
+        :root {
+            --bg-color: #111216;
+            --text-color: #e2e8f0;
+            --sub-color: #64748b;
+            --accent-color: #38bdf8;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #test-container {
+            max-width: 650px;
+            text-align: left;
+        }
+
+        #stats {
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        #words-display {
+            font-size: 1.5rem;
+            line-height: 2rem;
+            color: var(--sub-color);
+            user-select: none;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .correct { color: var(--text-color); }
+        .incorrect { color: #f87171; text-decoration: underline; }
+        .current { border-left: 2px solid var(--accent-color); padding-left: 1px; }
+
+        #input-field {
+            position: absolute;
+            opacity: 0;
+            z-index: -1;
+        }
+
+        #focus-error {
+            color: var(--sub-color);
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div id="test-container">
+    <div id="stats">
+        <div>WPM: <span id="wpm">0</span></div>
+        <div>Time: <span id="timer">30</span>s</div>
+    </div>
+
+    <div id="words-display"></div>
+    <input type="text" id="input-field" autocomplete="off" autofocus>
+    <div id="focus-error">Click here or start typing to begin...</div>
+</div>
+
+<script>
+    const textToType = "the quick brown fox jumps over the lazy dog minimalist typing tests are clean and focus entirely on speed and accuracy keep practice going";
+    const wordsArray = textToType.split(" ");
+    
+    let currentWordIndex = 0;
+    let startTime = null;
+    let timerInterval = null;
+    const testDuration = 30; // seconds
+    let timeLeft = testDuration;
+    let isPlaying = false;
+    let typedWords = [];
+
+    const wordsDisplay = document.getElementById('words-display');
+    const inputField = document.getElementById('input-field');
+    const timerDisplay = document.getElementById('timer');
+    const wpmDisplay = document.getElementById('wpm');
+    const focusError = document.getElementById('focus-error');
+
+    // Initialize display
+    function initTest() {
+        wordsDisplay.innerHTML = wordsArray.map((word, i) => 
+            `<span class="word ${i === 0 ? 'current' : ''}">${word}</span>`
+        ).join(' ');
+    }
+
+    // Keep hidden input focused
+    document.body.addEventListener('click', () => inputField.focus());
+
+    inputField.addEventListener('input', (e) => {
+        if (!isPlaying && inputField.value.trim() !== "") {
+            startTimer();
+        }
+
+        const currentWordSpan = wordsDisplay.children[currentWordIndex];
+        const currentWord = wordsArray[currentWordIndex];
+        const value = inputField.value;
+
+        // Check if user hit space to move to next word
+        if (value.endsWith(' ')) {
+            const userWord = value.trim();
+            typedWords.push(userWord);
+            
+            // Mark correct or incorrect
+            if (userWord === currentWord) {
+                currentWordSpan.className = 'word correct';
+            } else {
+                currentWordSpan.className = 'word incorrect';
+            }
+
+            currentWordIndex++;
+            inputField.value = '';
+
+            // Update active styling
+            if (currentWordIndex < wordsArray.length) {
+                wordsDisplay.children[currentWordIndex].classList.add('current');
+            } else {
+                endTest();
+            }
+        } else {
+            // Live partial checking for current word
+            if (currentWord.startsWith(value)) {
+                currentWordSpan.className = 'word current';
+            } else {
+                currentWordSpan.className = 'word incorrect current';
+            }
+        }
+    });
+
+    function startTimer() {
+        isPlaying = true;
+        startTime = Date.now();
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerDisplay.textContent = timeLeft;
+            
+            // Calculate live WPM
+            calculateWPM();
+
+            if (timeLeft <= 0) {
+                endTest();
+            }
+        }, 1000);
+    }
+
+    function calculateWPM() {
+        if (typedWords.length === 0) return;
+        const timeElapsed = (testDuration - timeLeft) / 60; // in minutes
+        
+        // Count total correct characters typed divided by 5 (standard word length)
+        let correctChars = 0;
+        typedWords.forEach((word, index) => {
+            if (word === wordsArray[index]) {
+                correctChars += word.length + 1; // +1 for the space
+            }
+        });
+
+        const wpm = Math.round((correctChars / 5) / timeElapsed);
+        wpmDisplay.textContent = isNaN(wpm) || !isFinite(wpm) ? 0 : wpm;
+    }
+
+    function endTest() {
+        clearInterval(timerInterval);
+        inputField.disabled = true;
+        calculateWPM();
+        focusError.textContent = "Test complete! Refresh to try again.";
+    }
+
+    initTest();
+</script>
+</body>
+</html>
